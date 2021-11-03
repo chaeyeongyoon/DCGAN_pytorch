@@ -24,7 +24,7 @@ def create_dataloader(dataroot, image_size, batch_size, num_workers, show_sample
     batch_size = 훈련에 사용되는 batch_size, DCGAN논문 : 128
     image_size = 훈련에 사용되는 이미지 크기(default: 64x64) , 변경하려면 D와 G의 구조 변경이 필요
     """
-    device = torch.device("cudo:0" if (torch.cuda.is_available() and opt.ngpu > 0) else "cpu")
+    device = torch.device("cuda:0" if (torch.cuda.is_available() and opt.ngpu > 0) else "cpu")
     # ImageFolder dataset
     dataset = dset.ImageFolder(root=dataroot,
                            transform=transforms.Compose([
@@ -34,7 +34,7 @@ def create_dataloader(dataroot, image_size, batch_size, num_workers, show_sample
                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                            ]))
     # DataLoader
-    dataloader = torch.utils.data.DataLoader(dataset, batchsize=batch_size, num_workers=num_workers)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=num_workers)
     if show_samples:
         real_batch = next(iter(dataloader))
         plt.figure(figsize=(8,8))
@@ -70,11 +70,11 @@ def train(opt):
     lr = 0.0002
     beta1 = 0.5 # beta1 hyperparam for Adam Optimizer
 
-    device = torch.device("cudo:0" if (torch.cuda.is_available() and ngpu > 0) else "cpu")
+    device = torch.device("cuda:0" if (torch.cuda.is_available() and ngpu > 0) else "cpu")
     dataloader = create_dataloader(dataroot, image_size, batch_size, num_workers, show_samples=opt.show_samples)
     
     netG = Generator(ngpu).to(device)
-    netD = Discriminator(ngpu)
+    netD = Discriminator(ngpu).to(device)
     if (device.type=='cuda') and (ngpu > 1):
         netG = nn.DataParallel(netG, list(range(ngpu)))
         netD = nn.DataParallel(netD, list(range(ngpu)))
@@ -87,7 +87,7 @@ def train(opt):
     print("-----Discriminator-----")
     print(netD)
 
-    criterion = nn.BCELoss
+    criterion = nn.BCELoss()
     # Create batch of latent vectors that we will use to visualize the progression of the generator
     fixed_noise = torch.randn(64, nz, 1, 1, device=device)
     real_label = 1.
@@ -130,7 +130,7 @@ def train(opt):
             # (2) Update G network: maximize log(D(G(z))) == minimize log(1-D(G(z)))
             ###########################
             netG.zero_grad()
-            label.fill(real_label)
+            label.fill_(real_label)
             output = netD(fake).view(-1)
             G_loss = criterion(output, label)
             G_loss.backward()
@@ -186,12 +186,12 @@ def train(opt):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataroot', type=str, default='./data/celeba', help="root directory for dataset")
+    parser.add_argument('--dataroot', type=str, default='./data', help="root directory for dataset")
     parser.add_argument('--batch-size', type=int, default=32, help="batch size for training")
     parser.add_argument('--num-epochs', type=int, default=5, help="Number of training epochs")
     parser.add_argument('--ngpu', type=int, default=1, help="number of GPUs available. Use 0 for CPU mode")
     parser.add_argument('--show-samples', action='store_true', help="show some samples of data")
-    parser.add_argument('--save-output', defaul=True, help="save output")
+    parser.add_argument('--save-output', default=True, help="save output")
 
     opt = parser.parse_args()
     print(opt)

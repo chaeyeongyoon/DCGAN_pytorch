@@ -33,7 +33,7 @@ class Generator(nn.Module):
         ngf = 64 # size of feature maps in G(output)
         # https://towardsdatascience.com/how-to-build-a-dcgan-with-pytorch-31bfbf2ad96a
         # https://towardsdatascience.com/gans-part2-dcgans-deep-convolution-gans-for-generating-images-c5d3c7c3510e
-        self.main = nn.Seqeuntial(
+        self.main = nn.Sequential(
             # input Z (latent vector) : (N, 100, 1, 1)
             nn.ConvTranspose2d(nz, ngf*8, 4, 1, 0, bias=False),
             nn.BatchNorm2d(ngf * 8),
@@ -58,7 +58,7 @@ class Generator(nn.Module):
     def forward(self, input):
         return self.main(input)
     
-class Discriminator(nn.Modle):
+class Discriminator(nn.Module):
     # D, is a binary classification network that takes an image as input and outputs a scalar probability that the input image is real (as opposed to fake).
     # D takes a 3x64x64 input image, processes it through a series of Conv2d, BatchNorm2d, and LeakyReLU layers, and outputs the final probability through a Sigmoid activation function. 
     # This architecture can be extended with more layers if necessary
@@ -67,7 +67,7 @@ class Discriminator(nn.Modle):
     def __init__(self, ngpu, nc=3):
         super(Discriminator, self).__init__()
         ndf = 64
-        self.main = nn.Seqeuntial(
+        self.main = nn.Sequential(
             # input (N, 3, 64, 64)
             nn.Conv2d(nc, ndf, 4, 2, 1, bias=False),
             nn.LeakyReLU(0.2, inplace=True),
