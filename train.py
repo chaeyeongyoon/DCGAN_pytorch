@@ -142,10 +142,13 @@ def train(opt):
             G_losses.append(G_loss.item())
             D_losses.append(D_loss.item())
             # Check how the generator is doing by saving G's output on fixed_noise
-            if ((epoch == num_epochs-1) and (i == len(dataloader)-1)):
+            if  (epoch == num_epochs-1) :
                 with torch.no_grad():
                     fake = netG(fixed_noise).detach().cpu()
                 img_list.append(vutils.make_grid(fake, padding=2, normalize=True))
+    
+    torch.save(netG.state_dict(), './weights/netG.pt')
+    torch.save(netD.state_dict(), './weights/netD.pt')
     if opt.save_output:
         plt.figure(figsize=(10,5))
         plt.title("Generator and Discriminator Loss During Training")
